@@ -1,13 +1,54 @@
 import { useEffect, useState } from 'react';
-import { Container, Typography, Box, Stepper, Step, StepLabel } from '@mui/material';
+import { Container, Typography, Box } from '@mui/material';
+import ProgressTracker from '../components/ProgressTracker'; // Import the ProgressTracker component
+import api from '../utils/api'; // Import the api utility
 
 export default function StudentDashboard() {
   const [request, setRequest] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const savedRequest = JSON.parse(localStorage.getItem('request'));
-    setRequest(savedRequest);
+    const fetchRequest = async () => {
+      const ticketId = localStorage.getItem('ticketId'); // Get ticketId from localStorage
+      if (ticketId) {
+        try {
+          const response = await api.post('/api/student/track', { ticketId }); // Use api.post
+          setRequest(response.data);
+        } catch (error) {
+          console.error('Error fetching request:', error);
+          setError('Failed to fetch request details. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setError('No ticket ID found. Please enter a valid ticket ID.');
+        setLoading(false);
+      }
+    };
+
+    fetchRequest();
   }, []);
+
+  if (loading) {
+    return (
+      <Container maxWidth="sm">
+        <Typography variant="h6" sx={{ mt: 4 }}>
+          Loading...
+        </Typography>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="sm">
+        <Typography variant="h6" sx={{ mt: 4 }}>
+          {error}
+        </Typography>
+      </Container>
+    );
+  }
 
   if (!request) {
     return (
@@ -30,13 +71,7 @@ export default function StudentDashboard() {
         </Typography>
 
         {/* Progress Tracker */}
-        <Stepper activeStep={activeStep} alternativeLabel sx={{ mt: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+        <ProgressTracker activeStep={activeStep} /> {/* Use the ProgressTracker component */}
 
         {/* Request Details */}
         <Box sx={{ mt: 4 }}>

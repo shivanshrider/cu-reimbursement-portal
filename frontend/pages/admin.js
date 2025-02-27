@@ -1,23 +1,30 @@
 import { useEffect, useState } from 'react';
-import { Container, Typography, Box, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button } from '@mui/material';
-import axios from 'axios';
+import { Container, Typography, Box } from '@mui/material';
 import { useRouter } from 'next/router';
+import RequestTable from '../components/RequestTable';
+import api from '../utils/api'; // Import the api utility
 
 export default function AdminDashboard() {
   const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get('/api/admin/dashboard', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await api.get('/api/admin/dashboard'); // Use api.get
         setRequests(response.data);
       } catch (error) {
-        console.error('Failed to fetch requests', error);
-        router.push('/');
+        console.error('Error fetching requests:', error);
+        if (error.response?.status === 401) {
+          // Redirect to login if unauthorized
+          router.push('/login');
+        } else {
+          setError('Failed to fetch requests. Please try again.');
+        }
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -26,10 +33,7 @@ export default function AdminDashboard() {
 
   const handleUpdateStatus = async (ticketId, status) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.patch(`/api/admin/update/${ticketId}`, { status }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.patch(`/api/admin/update/${ticketId}`, { status }); // Use api.patch
       setRequests((prev) =>
         prev.map((req) =>
           req.ticketId === ticketId ? { ...req, status } : req
@@ -37,8 +41,29 @@ export default function AdminDashboard() {
       );
     } catch (error) {
       console.error('Failed to update status', error);
+      alert('Failed to update status. Please try again.');
     }
   };
+
+  if (loading) {
+    return (
+      <Container maxWidth="lg">
+        <Typography variant="h6" sx={{ mt: 4 }}>
+          Loading...
+        </Typography>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="lg">
+        <Typography variant="h6" sx={{ mt: 4 }}>
+          {error}
+        </Typography>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg">
@@ -46,36 +71,7 @@ export default function AdminDashboard() {
         <Typography variant="h4" component="h1" gutterBottom>
           Admin Dashboard
         </Typography>
-
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Ticket ID</TableCell>
-                <TableCell>Student Name</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {requests.map((request) => (
-                <TableRow key={request.ticketId}>
-                  <TableCell>{request.ticketId}</TableCell>
-                  <TableCell>{request.studentName}</TableCell>
-                  <TableCell>{request.status}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="contained"
-                      onClick={() => handleUpdateStatus(request.ticketId, 'Done')}
-                    >
-                      Mark as Done
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <RequestTable requests={requests} onUpdateStatus={handleUpdateStatus} />
       </Box>
     </Container>
   );

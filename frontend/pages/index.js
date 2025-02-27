@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Container, Typography, TextField, Button, Box } from '@mui/material';
-import axios from 'axios';
 import { useRouter } from 'next/router';
+import api from '../utils/api'; // Import the api utility
 
 export default function Home() {
   const [email, setEmail] = useState('');
@@ -11,7 +11,7 @@ export default function Home() {
 
   const handleAdminLogin = async () => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password }); // Use api.post
       localStorage.setItem('token', response.data.token);
       router.push('/admin');
     } catch (error) {
@@ -22,7 +22,8 @@ export default function Home() {
 
   const handleStudentTrack = async () => {
     try {
-      const response = await axios.post('/api/student/track', { ticketId });
+      const response = await api.post('/api/student/track', { ticketId }); // Use api.post
+      localStorage.setItem('ticketId', ticketId); // Save ticketId to localStorage
       localStorage.setItem('request', JSON.stringify(response.data));
       router.push('/student');
     } catch (error) {

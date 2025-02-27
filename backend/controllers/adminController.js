@@ -1,6 +1,5 @@
 const Request = require('../models/Request');
 
-// Fetch All Requests
 const getAllRequests = async (req, res) => {
   try {
     const requests = await Request.find();
@@ -11,7 +10,6 @@ const getAllRequests = async (req, res) => {
   }
 };
 
-// Update Request Status
 const updateRequestStatus = async (req, res) => {
   const { ticketId } = req.params;
   const { status } = req.body;
