@@ -14,6 +14,7 @@ export default function AdminDashboard() {
     const fetchRequests = async () => {
       try {
         const response = await api.get('/api/admin/dashboard'); // Use api.get
+        console.log(response)
         setRequests(response.data);
       } catch (error) {
         console.error('Error fetching requests:', error);

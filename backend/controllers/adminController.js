@@ -32,7 +32,4 @@ const updateRequestStatus = async (req, res) => {
   }
 };
 
-module.exports = {
-  getAllRequests,
-  updateRequestStatus,
-};
+module.exports = { getAllRequests, updateRequestStatus };
